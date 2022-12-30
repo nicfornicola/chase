@@ -17,3 +17,7 @@ class Body():
         self.rad = rad
         self.speed = speed
         self.randMove = True
+        self.posMoves = [1,1,1,
+                         1,1,1,
+                         1,1,1]
+        self.inPen = False
