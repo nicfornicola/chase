@@ -18,4 +18,5 @@ class Body:
         self.randMove = False
         self.isLeft = False
         self.isRight = True
+        self.runFrame = 0
 

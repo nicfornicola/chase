@@ -103,11 +103,12 @@ def drawCircle(body):
 
 
 def drawImg(body):
+    img = body.img
     # center the sprites
-    x = body.rect.x - body.img.get_width() / 2
-    y = body.rect.y - body.img.get_height() / 2
+    x = body.rect.x - img.get_width() / 2
+    y = body.rect.y - img.get_height() / 2
 
-    window.blit(body.img, (x, y))
+    window.blit(img, (x, y))
 
 
 def draw(body):
@@ -279,8 +280,11 @@ def checkMoveKeys(body):
         body.rad = body.regRad
 
 
-bodies = (addBodies(1, "DOG", "TAN", getRand(), getRand(), rad=100, speed=2) +
-          addBodies(10, "SHEEP", "WHITE", getRand(), getRand(), rad=10, speed=1))
+bodies = (addBodies(1, "DOG", "TAN", getRand(), getRand(), rad=100, speed=3) +
+          addBodies(10, "SHEEP", "WHITE", getRand(), getRand(), rad=10, speed=1.5))
+
+addRunFrame = USEREVENT + 1
+pygame.time.set_timer(addRunFrame, 200)
 
 while 1:
     pygame.draw.rect(window, BLACK, (0, 0, sim_window, sim_window))
@@ -315,4 +319,6 @@ while 1:
         draw(bodies[i])
 
     pygame.display.update(pygame.Rect(0, 0, sim_window, sim_window))
-    clock.tick(144)
+    clock.tick(60)
+    if pygame.event.get(addRunFrame):
+        bodies[currentSprite].addFrame()
