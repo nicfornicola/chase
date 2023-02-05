@@ -19,4 +19,4 @@ class Body:
         self.isLeft = False
         self.isRight = True
         self.runFrame = 0
-
+        self.sneak = False

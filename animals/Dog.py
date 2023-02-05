@@ -12,7 +12,7 @@ class Dog(Body):
         super().__init__(type, color, x, y, rad, speed, width, height)
         self.sneak = False
         self.sneakRad = rad / 2
-        self.sneakImg = pygame.transform.scale(pygame.image.load("img/dogSneak.png"), (85, 35))
+        self.sneakImg = pygame.transform.scale(pygame.image.load("img/dogSneak.png"), (75, 35))
         self.runImgArray = [pygame.transform.scale(pygame.image.load("img/dogRun0.png"), (80, 45)),
                             pygame.transform.scale(pygame.image.load("img/dogRun1.png"), (105, 50)),
                             pygame.transform.scale(pygame.image.load("img/dogRun2.png"), (105, 50)),

@@ -23,10 +23,11 @@ clock = pygame.time.Clock()
 
 
 def getRandGreen():
-    x, y = random.randint(0, sim_window - 50), random.randint(0, sim_window - 50)
+    border = 50
+    x, y = random.randint(border, sim_window - border), random.randint(border, sim_window - border)
     maxWidth = sim_window - x
     maxHeight = sim_window - y
-    width, height = random.randint(20, maxWidth), random.randint(20, maxHeight)
+    width, height = random.randint(100, maxWidth), random.randint(50, maxHeight)
 
     return x, y, width, height
 
@@ -43,7 +44,6 @@ def getWalls(greenCords):
            Wall(x + width, y, big, height),
            Wall(x, y + height, width + big, big)]
 
-    # random gate side
     # TODO make it random sides
     gate = 1  # random.randint(0, 3)
     newWidth = (pen[gate].rect.width / 2.5)
@@ -69,20 +69,19 @@ SHEEP_IN = 0
 
 def drawPenWalls():
     for i in range(0, len(wallsArr)):
-        pygame.draw.rect(window, convertColor("BROWN"), wallsArr[i].rect)
+        pygame.draw.rect(window, (92, 64, 51), wallsArr[i].rect)
 
 
 # Font
 font = pygame.font.Font('freesansbold.ttf', 24)
-numberText = font.render(str(currentSprite), True, WHITE, BLACK)
-numberTextRect = numberText.get_rect()
-numberTextRect.center = (sim_window * .95, sim_window * .055)
+currentSpriteText = font.render(str(currentSprite), True, WHITE, BLACK)
+currentSpriteText.set_alpha(255)
 
-typeText = font.render(str(currentSprite), True, WHITE, BLACK)
-typeTextRect = typeText.get_rect()
-typeTextRect.center = (sim_window * .90, sim_window * .025)
+currentSpriteTextRect = currentSpriteText.get_rect()
+currentSpriteTextRect.center = (sim_window * .01, sim_window * .98)
 
-scoreText = font.render(str(SHEEP_IN), True, (255, 0, 0), (0, 255, 0))
+scoreText = font.render(str(SHEEP_IN), True, (255, 150, 0))
+scoreText.set_alpha(255)
 scoreTextRect = scoreText.get_rect()
 scoreTextRect.center = (greenCords[0] + greenCords[2] / 2, greenCords[1] + greenCords[3] / 2)
 
@@ -140,16 +139,18 @@ def isObstructed(body) -> bool:
     for i in range(0, len(wallsArr)):
         if wallsArr[i].rect.colliderect(body.rect):
             return True
-
     return False
 
 
 def move(body, x, y):
     tempX = body.rect.x
     tempY = body.rect.y
-    body.rect = body.rect.move(x, y)
+    body.rect = body.rect.move(x, 0)
     if isObstructed(body):
         body.rect.x = tempX
+
+    body.rect = body.rect.move(0, y)
+    if isObstructed(body):
         body.rect.y = tempY
 
     inWindow(body)
@@ -249,7 +250,8 @@ def checkKeyEvents(body, keys, currentSprite):
         body.setDisPressed(False)
 
     if event.type == KEYDOWN and event.key == K_LSHIFT or keys[pygame.K_LSHIFT]:
-        body.setSneak()
+        if callable(getattr(body, "setSneak", None)):
+            body.setSneak()
 
     if event.type == KEYDOWN and event.key == K_0:
         body.randMove = not body.randMove
@@ -274,7 +276,7 @@ def checkMoveKeys(body):
     if body.DisPressed:
         move(body, speed, 0)
 
-    if body.sneak:
+    if body.type == "DOG" and body.sneak:
         body.rad = body.sneakRad
     else:
         body.rad = body.regRad
@@ -284,19 +286,23 @@ bodies = (addBodies(1, "DOG", "TAN", getRand(), getRand(), rad=100, speed=3) +
           addBodies(10, "SHEEP", "WHITE", getRand(), getRand(), rad=10, speed=1.5))
 
 addRunFrame = USEREVENT + 1
-pygame.time.set_timer(addRunFrame, 200)
+pygame.time.set_timer(addRunFrame, 150)
+
+background = pygame.image.load("img/grass1.png")
 
 while 1:
-    pygame.draw.rect(window, BLACK, (0, 0, sim_window, sim_window))
-    pygame.draw.rect(window, (0, 255, 0), greenCords)
+    for y in range(0, sim_window, background.get_height()):
+        for x in range(0, sim_window, background.get_width()):
+            window.blit(background, (x, y))
 
-    window.blit(numberText, numberTextRect)
-    window.blit(typeText, typeTextRect)
+    pygame.draw.rect(window, (0, 128, 70), greenCords)
+
+    window.blit(currentSpriteText, currentSpriteTextRect)
     window.blit(scoreText, scoreTextRect)
     textColor = convertColor(bodies[currentSprite].color)
-    typeText = font.render(bodies[currentSprite].type, True, textColor, BLACK)
-    numberText = font.render(str(currentSprite), True, textColor, BLACK)
-    scoreText = font.render(str(SHEEP_IN), True, (255, 0, 0), (0, 255, 0))
+    currentSpriteText = font.render(bodies[currentSprite].type + " " + str(currentSprite), True, textColor)
+    scoreText = font.render(str(SHEEP_IN), True, (92, 64, 51))
+    SHEEP_IN = 0
 
     for event in pygame.event.get():
         keys = pygame.key.get_pressed()
@@ -304,7 +310,6 @@ while 1:
 
     checkMoveKeys(bodies[currentSprite])
 
-    SHEEP_IN = 0
 
     # check if any bodies need to move away
     for i in range(len(bodies)):
@@ -320,5 +325,5 @@ while 1:
 
     pygame.display.update(pygame.Rect(0, 0, sim_window, sim_window))
     clock.tick(60)
-    if pygame.event.get(addRunFrame):
+    if bodies[currentSprite].type == "DOG" and pygame.event.get(addRunFrame):
         bodies[currentSprite].addFrame()
