@@ -13,10 +13,10 @@ class Dog(Body):
         self.sneak = False
         self.sneakRad = rad / 2
         self.sneakImg = pygame.transform.scale(pygame.image.load("img/dogSneak.png"), (75, 35))
-        self.runImgArray = [pygame.transform.scale(pygame.image.load("img/dogRun0.png"), (80, 45)),
+        self.runImgArray = [pygame.transform.scale(pygame.image.load("img/dogRun0.png"), (90, 55)),
                             pygame.transform.scale(pygame.image.load("img/dogRun1.png"), (105, 50)),
-                            pygame.transform.scale(pygame.image.load("img/dogRun2.png"), (105, 50)),
-                            pygame.transform.scale(pygame.image.load("img/dogRun3.png"), (85, 38))]
+                            pygame.transform.scale(pygame.image.load("img/dogRun2.png"), (110, 55)),
+                            pygame.transform.scale(pygame.image.load("img/dogRun3.png"), (100, 40))]
         self.img = self.runImgArray[0]
 
     def setSneak(self):

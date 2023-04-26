@@ -9,6 +9,7 @@ from pygame.locals import *
 from Walls import Wall
 from animals.Dog import Dog
 from animals.Sheep import Sheep
+from util.Trailcell import Trailcell
 
 pygame.display.set_caption('Chase')
 sim_window = 800
@@ -96,6 +97,9 @@ def convertColor(color):
 def isInside(center, body):
     return pow(body.rect.x - center.rect.x, 2) + pow(body.rect.y - center.rect.y, 2) <= pow(center.rad, 2)
 
+def canSheepSee(center, body):
+    return pow(body.rect.x - center.rect.x, 2) + pow(body.rect.y - center.rect.y, 2) <= pow(center.sheepSee, 2)
+
 
 def drawCircle(body):
     pygame.draw.circle(window, body.color, [body.rect.x, body.rect.y], body.rad, 1)
@@ -110,11 +114,18 @@ def drawImg(body):
     window.blit(img, (x, y))
 
 
+def drawTrail(body):
+    if body.type == "SHEEP":
+        for trailCell in body.trail:
+            pygame.draw.rect(window, trailCell.color, trailCell.rect)
+
+
 def draw(body):
     pygame.draw.rect(window, body.color, body.rect)
     drawCircle(body)
     drawPenWalls()
     drawImg(body)
+    drawTrail(body)
 
 
 def toggleInPen(body):
@@ -189,20 +200,57 @@ def moveAway(body, bodies, index):
                 if 135 < angle < 180:
                     move(bodies[i], speed, -speedMod)
 
+def moveTo(body, bodies, index):
+    for i in range(len(bodies)):
+        if index != i:
+            if bodies[i].type == "SHEEP" and canSheepSee(body, bodies[i]):
+                (dx, dy) = (bodies[i].rect.x - body.rect.x, bodies[i].rect.y - body.rect.y)
+                angle = math.degrees(math.atan2(float(dx), float(dy)))
+                speed = body.speed
+                speedMod = speed * 1.5
+
+                if -180 <= angle <= -135:
+                    move(bodies[i], speed, speedMod)
+
+                if -135 <= angle <= -90:
+                    move(bodies[i], speedMod, speed)
+                if -90 <= angle <= -45:
+                    move(bodies[i], speedMod, -speed)
+
+                if -45 <= angle <= 0:
+                    move(bodies[i], speed, -speedMod)
+
+                if 0 <= angle <= 45:
+                    move(bodies[i], -speed, -speedMod)
+
+                if 45 <= angle <= 90:
+                    move(bodies[i], -speedMod, -speed)
+                if 90 <= angle <= 135:
+                    move(bodies[i], -speedMod, speed)
+
+                if 135 <= angle <= 180:
+                    move(bodies[i], -speed, speedMod)
+
+                return
 
 #  0 1 2
 #  3 4 5
 #  6 7 8
-def randMove(body, rand):
-    if rand <= 2:
-        move(bodies[i], 0, -body.speed)
-    elif rand >= 6:
-        move(bodies[i], 0, body.speed)
+def randMove(body, rand, i):
+    #
+    if body.type == "SHEEP" and random.randint(0,10) == 0:
+        moveTo(body, bodies, i)
+    else:
+        if random.randint(0, 5) == 0:
+            if rand <= 2:
+                move(body, 0, -body.speed)
+            elif rand >= 6:
+                move(body, 0, body.speed)
 
-    if rand % 3 == 0:
-        move(bodies[i], -body.speed, 0)
-    elif (rand - 2) % 3 == 0:
-        move(bodies[i], body.speed, 0)
+            if rand % 3 == 0:
+                move(body, -body.speed, 0)
+            elif (rand - 2) % 3 == 0:
+                move(body, body.speed, 0)
 
 
 def addBodies(count, type, color, x, y, rad, speed):
@@ -242,7 +290,7 @@ def checkKeyEvents(body, keys, currentSprite):
     if event.type == KEYDOWN and event.key == K_s or keys[pygame.K_s]:
         body.SisPressed = True
     elif event.type == KEYUP and event.key == K_s or keys[pygame.K_s]:
-        body.SisPressed = False
+         body.SisPressed = False
 
     if event.type == KEYDOWN and event.key == K_d or keys[pygame.K_d]:
         body.setDisPressed(True)
@@ -283,7 +331,7 @@ def checkMoveKeys(body):
 
 
 bodies = (addBodies(1, "DOG", "TAN", getRand(), getRand(), rad=100, speed=3) +
-          addBodies(10, "SHEEP", "WHITE", getRand(), getRand(), rad=10, speed=1.5))
+          addBodies(50, "SHEEP", "WHITE", getRand(), getRand(), rad=10, speed=1.5))
 
 addRunFrame = USEREVENT + 1
 pygame.time.set_timer(addRunFrame, 150)
@@ -315,7 +363,7 @@ while 1:
     for i in range(len(bodies)):
         moveAway(bodies[i], bodies, i)
         if bodies[i].randMove:
-            randMove(bodies[i], random.randint(0, 8))
+            randMove(bodies[i], random.randint(0, 8), i)
 
         toggleInPen(bodies[i])
         if bodies[i].inPen:
